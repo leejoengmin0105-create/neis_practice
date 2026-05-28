@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나이스 학교자율시간 등록 실습</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{font-family:'맑은 고딕','Malgun Gothic','Apple SD Gothic Neo',sans-serif;font-size:12px;background:#c8d4e8;min-height:100vh;}
+
+/* ── 상단 시스템 바 ── */
+.sys-bar{background:#1a3a6b;color:#fff;display:flex;align-items:center;padding:3px 10px;font-size:11px;gap:6px;}
+.sys-bar .logo{font-weight:bold;font-size:13px;color:#7eb8ff;margin-right:8px;letter-spacing:1px;}
+.sys-bar .path{color:#aaccff;font-size:10px;margin-left:auto;}
+.sys-bar .icons{display:flex;gap:8px;font-size:10px;color:#ccc;margin-left:12px;}
+.sys-bar .icons span{cursor:pointer;}
+.sys-bar .icons span:hover{color:#fff;text-decoration:underline;}
+
+/* ── 메뉴탭 ── */
+.menu-bar{background:#2d5fa5;display:flex;align-items:stretch;}
+.menu-tab{padding:5px 16px;color:#cce0ff;font-size:11px;cursor:pointer;border-right:1px solid #1a4a8a;}
+.menu-tab:hover{background:#3a6ec0;}
+.menu-tab.on{background:#fff;color:#003d7a;font-weight:bold;}
+
+/* ── 서브 탭 ── */
+.sub-bar{background:#f0f4fa;border-bottom:2px solid #2d5fa5;display:flex;align-items:center;padding:2px 8px;gap:2px;}
+.sub-tab{padding:4px 12px;font-size:11px;cursor:pointer;border:1px solid #bbb;background:#e0e8f5;color:#333;border-bottom:none;}
+.sub-tab.on{background:#fff;color:#003d7a;font-weight:bold;border-color:#2d5fa5;}
+
+/* ── 본문 ── */
+.neis-body{background:#fff;border:1px solid #aaa;margin:4px;padding:7px;}
+
+/* ── 제목 ── */
+.content-title{background:#e8eef8;border:1px solid #aaa;padding:4px 8px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
+.content-title .t1{font-size:13px;font-weight:bold;color:#003d7a;}
+
+/* ── 조회 조건 ── */
+.cond-box{background:#f5f8fc;border:1px solid #aaa;padding:5px 8px;margin-bottom:7px;}
+.cond-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.cond-lbl{font-size:11px;color:#333;font-weight:bold;white-space:nowrap;}
+.ns{border:1px solid #999;padding:1px 3px;font-size:11px;height:20px;background:#fff;font-family:inherit;}
+.ni{border:1px solid #999;padding:1px 3px;font-size:11px;height:20px;background:#fff;font-family:inherit;}
+.ns:focus,.ni:focus{border-color:#2d5fa5;outline:none;}
+
+/* ── 버튼 ── */
+.btn{padding:1px 9px;font-size:11px;cursor:pointer;border:1px solid;height:20px;font-family:inherit;white-space:nowrap;}
+.btn:hover{opacity:0.82;}
+.btn-q{background:#dce8f5;border-color:#5577aa;color:#003d7a;font-weight:bold;}
+.btn-reg{background:#003d7a;border-color:#001a3a;color:#fff;}
+.btn-del{background:#cc0000;border-color:#880000;color:#fff;}
+.btn-save{background:#005500;border-color:#003300;color:#fff;font-weight:bold;}
+.btn-cancel{background:#e8e8e8;border-color:#999;color:#333;}
+.btn-find{background:#f5f5f5;border-color:#aaa;color:#333;font-size:10px;padding:1px 5px;}
+.btn-help{background:#f0e8d0;border-color:#b09050;color:#604010;}
+
+/* ── 그리드 ── */
+.grid-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;}
+.grid-title{font-size:12px;font-weight:bold;color:#003d7a;}
+.grid-title::before{content:'▶ ';font-size:10px;}
+.tbl{width:100%;border-collapse:collapse;font-size:11px;}
+.tbl th{background:#d0ddf0;border:1px solid #999;padding:3px 5px;text-align:center;color:#003d7a;font-weight:bold;white-space:nowrap;}
+.tbl td{border:1px solid #ccc;padding:2px 5px;text-align:center;vertical-align:middle;}
+.tbl tr:nth-child(even) td{background:#f5f8ff;}
+.tbl tr:hover td{background:#deeaff;}
+.tbl tr.sel td{background:#b8d0f5!important;}
+
+/* ── 두 패널 ── */
+.two-panel{display:flex;gap:6px;}
+.panel-left{flex:1;min-width:0;overflow-x:auto;}
+.panel-right{width:230px;flex-shrink:0;}
+
+/* ── 자율시간 패널 ── */
+.auto-section{border:1px solid #aaa;}
+.auto-hd{background:#dce6f4;border-bottom:1px solid #aaa;padding:3px 6px;font-size:11px;font-weight:bold;color:#003d7a;display:flex;justify-content:space-between;align-items:center;}
+
+/* ── 상태바 ── */
+.status-bar{background:#e0e8f5;border-top:1px solid #aaa;padding:2px 8px;font-size:10px;color:#555;display:flex;gap:10px;margin:0 4px 4px;}
+
+/* ── 실습 안내 배너 ── */
+.guide-banner{background:#fff8dc;border:1px solid #e0c040;padding:5px 10px;margin:4px 4px 0;font-size:11px;color:#604000;display:flex;align-items:center;gap:6px;}
+.guide-banner::before{content:'📌';font-size:13px;}
+
+/* ============================
+   팝업 공통
+   ============================ */
+.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:100;align-items:flex-start;justify-content:center;padding-top:40px;}
+.modal-bg.show{display:flex;}
+
+/* ── 학교자율시간 등록 팝업 ── */
+.popup{background:#fff;border:2px solid #2d5fa5;width:390px;max-height:90vh;overflow-y:auto;}
+.popup-title{background:#2d5fa5;color:#fff;padding:5px 10px;font-size:12px;font-weight:bold;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1;}
+.popup-title .xbtn{cursor:pointer;font-size:16px;line-height:1;}
+.popup-body{padding:10px 12px;}
+.popup-footer{border-top:1px solid #ddd;padding:6px;display:flex;justify-content:center;gap:5px;background:#f5f5f5;position:sticky;bottom:0;}
+
+/* 팝업 폼 */
+.ftbl{width:100%;border-collapse:collapse;font-size:11px;}
+.ftbl th{background:#e8eef8;border:1px solid #bbb;padding:4px 6px;text-align:left;font-weight:bold;color:#333;white-space:nowrap;width:100px;vertical-align:top;padding-top:6px;}
+.ftbl td{border:1px solid #bbb;padding:3px 5px;}
+.ftbl .ns,.ftbl .ni{width:100%;}
+.req{color:#c00;font-weight:bold;}
+
+/* 팝업 헤더 정보 */
+.pop-info{background:#eef3fa;border:1px solid #ccc;padding:4px 8px;font-size:11px;margin-bottom:8px;color:#333;line-height:1.6;}
+
+/* ── 과목찾기 팝업 ── */
+.sub-popup{background:#fff;border:2px solid #1a4a8a;width:440px;max-height:80vh;overflow-y:auto;}
+.sub-popup-title{background:#1a4a8a;color:#fff;padding:4px 8px;font-size:11px;font-weight:bold;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;}
+
+/* ── 알림 팝업 ── */
+.alert-popup{background:#fff;border:2px solid #2d5fa5;width:300px;}
+.alert-popup .amsg{padding:18px 16px;font-size:12px;color:#333;text-align:center;line-height:1.7;}
+
+/* ── 도움말 팝업 ── */
+.help-popup{background:#fff;border:2px solid #b09050;width:420px;max-height:80vh;overflow-y:auto;}
+.help-popup-title{background:#8B6914;color:#fff;padding:5px 10px;font-size:12px;font-weight:bold;display:flex;justify-content:space-between;align-items:center;}
+.help-body{padding:14px 14px;font-size:12px;color:#333;line-height:1.8;}
+.help-step{background:#f5f8ff;border-left:3px solid #2d5fa5;padding:6px 10px;margin:8px 0;border-radius:0 4px 4px 0;}
+.help-step strong{color:#003d7a;}
+
+/* ── 저장완료 팝업 ── */
+.done-popup{background:#fff;border:2px solid #005500;width:300px;text-align:center;}
+
+/* ── 토스트 ── */
+.toast{display:none;position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:7px 20px;border-radius:3px;font-size:12px;z-index:999;pointer-events:none;}
+.toast.show{display:block;}
+
+/* 반응형 */
+@media(max-width:700px){
+  .two-panel{flex-direction:column;}
+  .panel-right{width:100%;}
+  .popup{width:96vw;}
+  .sub-popup{width:96vw;}
+  .sys-bar .path{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- 실습 안내 배너 -->
+<div class="guide-banner">
+  나이스(NEIS) 학교자율시간 등록 <strong>실습용 화면</strong>입니다. 실제 데이터는 저장되지 않습니다.
+  우측 상단 <strong>[도움말]</strong> 버튼을 클릭하면 등록 절차를 확인할 수 있습니다.
+</div>
+
+<!-- 시스템 상단바 -->
+<div class="sys-bar">
+  <span class="logo">NEIS</span>
+  <span style="color:#aaccff;font-size:11px;">교육행정정보시스템</span>
+  <span class="path">교육과정 &gt; 교과편제관리 &gt; 학교교육과정편제 및 시간배당 관리</span>
+  <span class="icons">
+    <span>홈</span><span>|</span><span>즐겨찾기</span><span>|</span><span onclick="showHelp()">도움말</span><span>|</span><span>로그아웃</span>
+  </span>
+</div>
+
+<!-- 메뉴 탭 -->
+<div class="menu-bar">
+  <div class="menu-tab">학교생활기록</div>
+  <div class="menu-tab">성적</div>
+  <div class="menu-tab on">교육과정</div>
+  <div class="menu-tab">학생</div>
+  <div class="menu-tab">학적</div>
+  <div class="menu-tab">보건</div>
+</div>
+
+<!-- 서브 탭 -->
+<div class="sub-bar">
+  <div class="sub-tab">교육과정편성기준관리</div>
+  <div class="sub-tab on">학교교육과정편제 및 시간배당 관리</div>
+  <div class="sub-tab">교육과정운영계획</div>
+</div>
+
+<!-- 본문 -->
+<div class="neis-body">
+
+  <!-- 제목 -->
+  <div class="content-title">
+    <span class="t1">■ 학교교과과정편제 및 시간배당 관리</span>
+    <div style="display:flex;gap:3px;">
+      <button class="btn btn-help" onclick="showHelp()">❓ 도움말</button>
+      <button class="btn btn-cancel" onclick="doSearch()">새로고침</button>
+    </div>
+  </div>
+
+  <!-- 조회 조건 -->
+  <div class="cond-box">
+    <div class="cond-row">
+      <span class="cond-lbl">학년도</span>
+      <select class="ns" id="sYear" style="width:62px;"><option>2025</option><option>2026</option></select>
+      <span class="cond-lbl" style="margin-left:6px;">학교급</span>
+      <select class="ns" id="sSchool" style="width:82px;">
+        <option>초등학교</option><option>중학교</option><option>고등학교</option>
+      </select>
+      <span class="cond-lbl" style="margin-left:6px;">교육과정</span>
+      <select class="ns" id="sCurr" style="width:130px;">
+        <option>2022년 개정교육과정</option>
+        <option>2015년 개정교육과정</option>
+      </select>
+      <button class="btn btn-q" onclick="doSearch()">조회</button>
+    </div>
+  </div>
+
+  <!-- 두 패널 -->
+  <div class="two-panel">
+    <!-- 좌측: 공통교과목 편제 -->
+    <div class="panel-left">
+      <div class="grid-hd">
+        <div class="grid-title">공통교과목 편제 <span id="totalCnt" style="font-weight:normal;color:#555;font-size:10px;">Total 0</span></div>
+      </div>
+      <table class="tbl" id="mainTbl">
+        <thead>
+          <tr>
+            <th style="width:80px;">교과(군)</th>
+            <th style="width:80px;">과목</th>
+            <th>1학년<br>기준시수</th>
+            <th>2학년<br>기준시수</th>
+            <th>3학년<br>기준시수</th>
+            <th>4학년<br>기준시수</th>
+            <th>5학년<br>기준시수</th>
+            <th>6학년<br>기준시수</th>
+            <th>증감</th>
+          </tr>
+        </thead>
+        <tbody id="mainBody">
+          <tr><td colspan="9" style="color:#999;padding:14px;text-align:center;">조회 버튼을 클릭하세요.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 우측: 학교자율시간 -->
+    <div class="panel-right">
+      <div class="auto-section">
+        <div class="auto-hd">
+          학교자율시간 <span id="autoCnt" style="font-size:10px;color:#555;font-weight:normal;">Total 0</span>
+          <button class="btn btn-reg" onclick="openPopup()" style="font-size:10px;padding:1px 7px;height:18px;">등록</button>
+        </div>
+        <table class="tbl" id="autoTbl">
+          <thead>
+            <tr>
+              <th>학년/학기</th>
+              <th>과목명</th>
+              <th>시수</th>
+              <th>편제</th>
+              <th>삭제</th>
+            </tr>
+          </thead>
+          <tbody id="autoBody">
+            <tr><td colspan="5" style="color:#999;padding:12px;font-size:10px;text-align:center;">등록된 항목이<br>없습니다.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 저장 버튼 -->
+  <div style="display:flex;justify-content:center;gap:5px;margin-top:8px;padding-top:7px;border-top:1px solid #ddd;">
+    <button class="btn btn-save" onclick="saveAll()">저장</button>
+    <button class="btn btn-cancel" onclick="doSearch()">취소</button>
+  </div>
+</div>
+
+<div class="status-bar">
+  <span id="stMsg">※ [조회] 버튼을 클릭한 후, [등록] 버튼으로 학교자율시간을 등록하세요.</span>
+</div>
+
+<!-- =============================================
+     팝업 1: 학교자율시간 등록
+     ============================================= -->
+<div class="modal-bg" id="mainModal">
+  <div class="popup">
+    <div class="popup-title">
+      ✦ 학교자율시간 등록
+      <span class="xbtn" onclick="closePopup()">×</span>
+    </div>
+    <div class="popup-body">
+      <div class="pop-info">
+        학년도 / 학년 : <strong id="popYearGrade">2025학년도 / 3학년</strong>
+        &nbsp;&nbsp; 교육과정참수 : <strong id="popCurr">2022년 개정교육과정</strong>
+      </div>
+      <table class="ftbl">
+        <tr>
+          <th><span class="req">*</span>운영방식</th>
+          <td>
+            <select class="ns" id="pMethod" onchange="onMethodChange()" style="width:100%;">
+              <option value="">- 선택 -</option>
+              <option value="학급공통">학급공통</option>
+              <option value="학생선택">학생선택</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <th><span class="req">*</span>편제<br>(관련교과(군))</th>
+          <td>
+            <select class="ns" id="pSubjectGroup" style="width:100%;">
+              <option value="">- 선택 -</option>
+              <option>국어</option>
+              <option>수학</option>
+              <option>사회/도덕</option>
+              <option>과학/실과</option>
+              <option>체육</option>
+              <option>예술(음악/미술)</option>
+              <option>영어</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <th><span class="req">*</span>과목/활동구분</th>
+          <td>
+            <select class="ns" id="pClassType" onchange="onClassTypeChange()" style="width:100%;">
+              <option value="">- 선택 -</option>
+              <option value="과목">과목</option>
+              <option value="활동">활동</option>
+            </select>
+          </td>
+        </tr>
+        <tr id="rowSubject">
+          <th>과목</th>
+          <td>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <input type="text" class="ni" id="pSubjectName" placeholder="과목을 선택하세요" readonly
+                style="flex:1;background:#f5f5f5;cursor:pointer;" onclick="openSubjectFind()">
+              <button class="btn btn-find" onclick="openSubjectFind()">찾기</button>
+            </div>
+            <div style="font-size:10px;color:#888;margin-top:2px;">※ 고시 외 과목만 검색됩니다.</div>
+          </td>
+        </tr>
+        <tr id="rowActivity" style="display:none;">
+          <th>활동</th>
+          <td>
+            <select class="ns" id="pActivity" style="width:100%;">
+              <option value="">- 선택 -</option>
+              <option>사회/도덕</option>
+              <option>미술</option>
+              <option>음악</option>
+              <option>체육</option>
+              <option>기타활동</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <th><span class="req">*</span>학기</th>
+          <td>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <label style="display:flex;align-items:center;gap:3px;cursor:pointer;">
+                <input type="radio" name="pSem" value="1학기" onchange="buildHoursInput()"> <span>1학기</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:3px;cursor:pointer;">
+                <input type="radio" name="pSem" value="2학기" onchange="buildHoursInput()"> <span>2학기</span>
+              </label>
+            </div>
+          </td>
+        </tr>
+        <tr id="rowHours">
+          <th><span class="req">*</span>시수</th>
+          <td>
+            <div id="hoursWrap">
+              <span style="font-size:10px;color:#999;">학기를 먼저 선택하세요.</span>
+            </div>
+            <div style="font-size:10px;color:#888;margin-top:2px;" id="hoursNote"></div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="popup-footer">
+      <button class="btn btn-save" onclick="savePopup()">저장</button>
+      <button class="btn btn-cancel" onclick="closePopup()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================
+     팝업 2: 과목찾기
+     ============================================= -->
+<div class="modal-bg" id="subjectModal" style="padding-top:60px;">
+  <div class="sub-popup">
+    <div class="sub-popup-title">
+      과목찾기 <span style="font-weight:normal;font-size:10px;">(고시 외 과목만 검색됩니다)</span>
+      <span style="cursor:pointer;font-size:14px;" onclick="closeSubject()">×</span>
+    </div>
+    <div style="padding:7px 10px;background:#f5f8fc;border-bottom:1px solid #ddd;display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+      <span style="font-size:11px;font-weight:bold;">과목명</span>
+      <input type="text" class="ni" id="subjectSearch" style="width:120px;" placeholder="과목명 입력"
+        onkeydown="if(event.key==='Enter')searchSubject()">
+      <button class="btn btn-q" onclick="searchSubject()">검색</button>
+      <span style="font-size:10px;color:#777;margin-left:4px;">※ 검색어 없이 검색 시 전체 표시</span>
+    </div>
+    <div style="padding:7px 10px;">
+      <table class="tbl" style="font-size:11px;">
+        <thead>
+          <tr>
+            <th>과목코드</th>
+            <th>과목명</th>
+            <th>교과(군)</th>
+            <th>학교급</th>
+            <th>선택</th>
+          </tr>
+        </thead>
+        <tbody id="subjectBody">
+          <tr><td colspan="5" style="color:#999;padding:10px;text-align:center;">검색 버튼을 클릭하세요.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="padding:6px;background:#f5f5f5;border-top:1px solid #ddd;text-align:center;">
+      <button class="btn btn-cancel" onclick="closeSubject()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================
+     팝업 3: 알림
+     ============================================= -->
+<div class="modal-bg" id="alertModal" style="padding-top:120px;">
+  <div class="alert-popup">
+    <div style="background:#2d5fa5;color:#fff;padding:4px 10px;font-size:11px;display:flex;justify-content:space-between;align-items:center;">
+      알림 <span style="cursor:pointer;" onclick="closeAlert()">×</span>
+    </div>
+    <div class="amsg" id="alertMsg"></div>
+    <div style="padding:6px;border-top:1px solid #ddd;text-align:center;">
+      <button class="btn btn-q" onclick="closeAlert()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================
+     팝업 4: 도움말
+     ============================================= -->
+<div class="modal-bg" id="helpModal" style="padding-top:30px;">
+  <div class="help-popup">
+    <div class="help-popup-title">
+      ❓ 학교자율시간 등록 도움말
+      <span style="cursor:pointer;font-size:15px;" onclick="closeHelp()">×</span>
+    </div>
+    <div class="help-body">
+      <p style="font-weight:bold;font-size:13px;color:#003d7a;margin-bottom:8px;">📋 학교자율시간 등록 절차</p>
+
+      <div class="help-step">
+        <strong>STEP 1</strong> — 상단 조회 조건에서 <strong>학년도, 학교급, 교육과정</strong>을 선택하고 [조회] 버튼 클릭
+      </div>
+      <div class="help-step">
+        <strong>STEP 2</strong> — 우측 패널 <strong>[등록]</strong> 버튼 클릭 → 학교자율시간 등록 팝업 오픈
+      </div>
+      <div class="help-step">
+        <strong>STEP 3</strong> — 팝업에서 다음 항목 입력:<br>
+        &nbsp;&nbsp;• <strong>운영방식</strong> : 학급공통 / 학생선택<br>
+        &nbsp;&nbsp;• <strong>편제(관련교과(군))</strong> : 국어, 수학, 사회/도덕 등<br>
+        &nbsp;&nbsp;• <strong>과목/활동 구분</strong> : 과목 또는 활동<br>
+        &nbsp;&nbsp;• <strong>과목</strong> : [찾기] 버튼 → 과목찾기 팝업에서 검색 후 선택<br>
+        &nbsp;&nbsp;• <strong>학기</strong> : 1학기 / 2학기 선택<br>
+        &nbsp;&nbsp;• <strong>시수</strong> : 숫자 입력 (3~4학년 최대 29시간, 5~6학년 최대 32시간)
+      </div>
+      <div class="help-step">
+        <strong>STEP 4</strong> — 팝업 하단 <strong>[저장]</strong> 클릭 → 우측 목록에 추가 확인
+      </div>
+      <div class="help-step">
+        <strong>STEP 5</strong> — 등록 완료 후 화면 하단 <strong>[저장]</strong> 버튼으로 최종 저장
+      </div>
+
+      <div style="background:#fff8dc;border:1px solid #e0c040;padding:8px 10px;margin-top:10px;font-size:11px;color:#604000;border-radius:2px;">
+        <strong>⚠ 유의사항</strong><br>
+        • 3~4학년: 학기당 교과 시수 최대 29시간 제한<br>
+        • 5~6학년: 학기당 교과 시수 최대 32시간 제한<br>
+        • 과목 선택 시 고시 내 과목은 검색되지 않으며, 고시 외 과목만 등록 가능<br>
+        • 동일 과목은 한 학기만 편성 가능<br>
+        • 적용 학년: 3~6학년 (1~2학년은 학교자율시간 미편성)
+      </div>
+    </div>
+    <div style="padding:6px;background:#f5f5f5;border-top:1px solid #ddd;text-align:center;">
+      <button class="btn btn-help" onclick="closeHelp()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================
+     팝업 5: 저장 완료
+     ============================================= -->
+<div class="modal-bg" id="doneModal" style="padding-top:120px;">
+  <div class="done-popup">
+    <div style="background:#005500;color:#fff;padding:4px 10px;font-size:11px;display:flex;justify-content:space-between;align-items:center;">
+      저장 완료 <span style="cursor:pointer;" onclick="closeDone()">×</span>
+    </div>
+    <div style="padding:20px 16px;text-align:center;">
+      <div style="font-size:28px;margin-bottom:8px;">✅</div>
+      <div style="font-size:13px;color:#005500;font-weight:bold;">저장이 완료되었습니다.</div>
+      <div id="doneSummary" style="font-size:11px;color:#555;margin-top:8px;line-height:1.6;"></div>
+    </div>
+    <div style="padding:6px;border-top:1px solid #ddd;text-align:center;">
+      <button class="btn btn-save" onclick="closeDone()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 토스트 -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── 데이터 ── */
+var autoData = [];
+var currentGrade = '3학년';
+
+var subjectSamples = [
+  {code:'S10001', name:'우리 고장 탐구', group:'사회/도덕', level:'초등'},
+  {code:'S10002', name:'생태환경이해', group:'과학/실과', level:'초등'},
+  {code:'S10003', name:'디지털 창작', group:'과학/실과', level:'초등'},
+  {code:'S10004', name:'지역사회와 나', group:'사회/도덕', level:'초등'},
+  {code:'S10005', name:'몸으로 말해요', group:'체육', level:'초등'},
+  {code:'S10006', name:'음악과 함께', group:'예술(음악/미술)', level:'초등'},
+  {code:'S10007', name:'창의 미술 탐험', group:'예술(음악/미술)', level:'초등'},
+  {code:'S10008', name:'수학 탐구 여행', group:'수학', level:'초등'},
+  {code:'S10009', name:'글쓰기 공방', group:'국어', level:'초등'},
+  {code:'S10010', name:'세계 속의 나', group:'사회/도덕', level:'초등'},
+  {code:'S10011', name:'즐거운 요리', group:'과학/실과', level:'초등'},
+  {code:'S10012', name:'코딩으로 배우는 수학', group:'수학', level:'초등'},
+];
+
+var mainGridData = [
+  {subject:'국어', course:'국어', h:[448,448,204,204,204,204]},
+  {subject:'도덕', course:'도덕', h:[0,0,68,68,68,68]},
+  {subject:'수학', course:'수학', h:[256,256,272,272,272,272]},
+  {subject:'바른생활', course:'바른생활', h:[128,128,0,0,0,0]},
+  {subject:'슬기로운생활', course:'슬기로운생활', h:[192,192,0,0,0,0]},
+  {subject:'즐거운생활', course:'즐거운생활', h:[384,384,0,0,0,0]},
+  {subject:'사회', course:'사회', h:[0,0,136,136,136,136]},
+  {subject:'과학', course:'과학', h:[0,0,102,102,136,136]},
+  {subject:'실과', course:'실과', h:[0,0,0,0,68,68]},
+  {subject:'체육', course:'체육', h:[0,0,102,102,102,102]},
+  {subject:'음악', course:'음악', h:[0,0,68,68,68,68]},
+  {subject:'미술', course:'미술', h:[0,0,68,68,68,68]},
+  {subject:'영어', course:'영어', h:[0,0,136,136,136,136]},
+];
+
+/* ── 메인 조회 ── */
+function doSearch(){
+  var html='';
+  mainGridData.forEach(function(d){
+    html+='<tr>';
+    html+='<td style="text-align:left;">'+d.subject+'</td>';
+    html+='<td style="text-align:left;">'+d.course+'</td>';
+    d.h.forEach(function(v){ html+='<td>'+(v||'-')+'</td>'; });
+    html+='<td>0</td></tr>';
+  });
+  document.getElementById('mainBody').innerHTML=html;
+  document.getElementById('totalCnt').textContent='Total '+mainGridData.length;
+  renderAutoGrid();
+  showToast('조회되었습니다.');
+  setStatus('조회 완료. 우측 [등록] 버튼으로 학교자율시간을 등록하세요.');
+}
+
+/* ── 자율시간 그리드 ── */
+function renderAutoGrid(){
+  var tbody=document.getElementById('autoBody');
+  document.getElementById('autoCnt').textContent='Total '+autoData.length;
+  if(autoData.length===0){
+    tbody.innerHTML='<tr><td colspan="5" style="color:#999;padding:12px;font-size:10px;text-align:center;">등록된 항목이<br>없습니다.</td></tr>';
+    return;
+  }
+  var html='';
+  autoData.forEach(function(d,i){
+    html+='<tr>';
+    html+='<td style="font-size:10px;">'+d.grade+'<br>'+d.semester+'</td>';
+    html+='<td style="text-align:left;font-size:10px;max-width:70px;word-break:break-all;">'+d.subjectName+'</td>';
+    html+='<td>'+d.hours+'</td>';
+    html+='<td style="font-size:10px;">'+d.subjectGroup+'</td>';
+    html+='<td><button class="btn btn-del" style="font-size:9px;padding:0 4px;height:16px;" onclick="delAuto('+i+')">삭제</button></td>';
+    html+='</tr>';
+  });
+  tbody.innerHTML=html;
+}
+
+function delAuto(i){
+  if(!confirm('이 항목을 삭제하시겠습니까?')) return;
+  autoData.splice(i,1);
+  renderAutoGrid();
+  showToast('삭제되었습니다.');
+}
+
+/* ── 등록 팝업 열기 ── */
+function openPopup(){
+  var grades=['3학년','4학년','5학년','6학년'];
+  currentGrade=grades[0];
+  document.getElementById('popYearGrade').textContent='2025학년도 / '+currentGrade;
+  document.getElementById('popCurr').textContent=document.getElementById('sCurr').value;
+  resetPopupForm();
+  document.getElementById('mainModal').classList.add('show');
+}
+function closePopup(){
+  document.getElementById('mainModal').classList.remove('show');
+}
+function resetPopupForm(){
+  ['pMethod','pSubjectGroup','pClassType','pActivity'].forEach(function(id){
+    document.getElementById(id).value='';
+  });
+  document.getElementById('pSubjectName').value='';
+  document.querySelectorAll('input[name="pSem"]').forEach(function(r){r.checked=false;});
+  document.getElementById('rowSubject').style.display='';
+  document.getElementById('rowActivity').style.display='none';
+  document.getElementById('hoursWrap').innerHTML='<span style="font-size:10px;color:#999;">학기를 먼저 선택하세요.</span>';
+  document.getElementById('hoursNote').textContent='';
+}
+
+/* ── 과목/활동 구분 변경 ── */
+function onClassTypeChange(){
+  var v=document.getElementById('pClassType').value;
+  document.getElementById('rowSubject').style.display=(v==='활동'?'none':'');
+  document.getElementById('rowActivity').style.display=(v==='활동'?'':'none');
+  if(v==='과목') document.getElementById('pSubjectName').value='';
+}
+function onMethodChange(){}
+
+/* ── 시수 입력 생성 ── */
+function buildHoursInput(){
+  var sem=document.querySelector('input[name="pSem"]:checked');
+  if(!sem) return;
+  document.getElementById('hoursWrap').innerHTML=
+    '<input type="number" id="pHoursVal" min="1" max="40" class="ni" style="width:55px;" placeholder="0">'+
+    '<span style="font-size:11px;margin-left:4px;">시간</span>';
+  document.getElementById('hoursNote').textContent='※ 3~4학년 최대 29시간 / 5~6학년 최대 32시간';
+}
+
+/* ── 팝업 저장 ── */
+function savePopup(){
+  var method=document.getElementById('pMethod').value;
+  var group=document.getElementById('pSubjectGroup').value;
+  var classType=document.getElementById('pClassType').value;
+  var sem=document.querySelector('input[name="pSem"]:checked');
+  if(!method){showAlert('운영방식을 선택하세요.'); return;}
+  if(!group){showAlert('편제(관련교과(군))를 선택하세요.'); return;}
+  if(!classType){showAlert('과목/활동 구분을 선택하세요.'); return;}
+  if(!sem){showAlert('학기를 선택하세요.'); return;}
+  var subName='';
+  if(classType==='과목'){
+    subName=document.getElementById('pSubjectName').value;
+    if(!subName){showAlert('과목을 선택하세요.\n[찾기] 버튼으로 과목을 검색하세요.'); return;}
+  } else {
+    subName=document.getElementById('pActivity').value;
+    if(!subName){showAlert('활동을 선택하세요.'); return;}
+  }
+  var hEl=document.getElementById('pHoursVal');
+  if(!hEl){showAlert('시수를 입력하세요.'); return;}
+  var hours=parseInt(hEl.value)||0;
+  if(hours<=0){showAlert('시수를 입력하세요.'); return;}
+  autoData.push({
+    grade:currentGrade, semester:sem.value, method:method,
+    subjectGroup:group, classType:classType, subjectName:subName, hours:hours
+  });
+  renderAutoGrid();
+  closePopup();
+  showToast('✔ 등록되었습니다. 목록을 확인하고 최종 [저장]을 클릭하세요.');
+  setStatus('학교자율시간이 추가되었습니다. 하단 [저장] 버튼으로 최종 저장하세요.');
+}
+
+/* ── 최종 저장 ── */
+function saveAll(){
+  if(autoData.length===0){showAlert('저장할 학교자율시간이 없습니다.\n먼저 [등록] 버튼으로 항목을 추가하세요.'); return;}
+  var summary='등록 항목: '+autoData.length+'건<br>';
+  autoData.forEach(function(d,i){
+    summary+='&nbsp;'+(i+1)+'. '+d.grade+' '+d.semester+' - '+d.subjectName+' ('+d.hours+'시간)<br>';
+  });
+  document.getElementById('doneSummary').innerHTML=summary;
+  document.getElementById('doneModal').classList.add('show');
+  setStatus('저장이 완료되었습니다.');
+}
+function closeDone(){
+  document.getElementById('doneModal').classList.remove('show');
+}
+
+/* ── 과목 찾기 ── */
+function openSubjectFind(){
+  document.getElementById('subjectSearch').value='';
+  document.getElementById('subjectBody').innerHTML='<tr><td colspan="5" style="color:#999;padding:10px;text-align:center;">검색어를 입력하고 [검색] 버튼을 클릭하세요.<br>검색어 없이 클릭 시 전체 목록이 표시됩니다.</td></tr>';
+  document.getElementById('subjectModal').classList.add('show');
+}
+function closeSubject(){
+  document.getElementById('subjectModal').classList.remove('show');
+}
+function searchSubject(){
+  var q=document.getElementById('subjectSearch').value.trim();
+  var filtered=subjectSamples.filter(function(s){
+    return !q||s.name.indexOf(q)>=0||s.group.indexOf(q)>=0||s.code.indexOf(q)>=0;
+  });
+  if(filtered.length===0){
+    document.getElementById('subjectBody').innerHTML='<tr><td colspan="5" style="color:#999;padding:10px;text-align:center;">검색 결과가 없습니다.</td></tr>';
+    return;
+  }
+  var html='';
+  filtered.forEach(function(s){
+    html+='<tr style="cursor:pointer;" onclick="selectSubject(\''+s.name.replace(/'/g,"\\'")+'\',\''+s.group+'\')">';
+    html+='<td>'+s.code+'</td>';
+    html+='<td style="text-align:left;">'+s.name+'</td>';
+    html+='<td>'+s.group+'</td>';
+    html+='<td>'+s.level+'</td>';
+    html+='<td><button class="btn btn-reg" style="font-size:10px;padding:0 6px;height:18px;" '+
+          'onclick="selectSubject(\''+s.name.replace(/'/g,"\\'")+'\',\''+s.group+'\');event.stopPropagation()">선택</button></td>';
+    html+='</tr>';
+  });
+  document.getElementById('subjectBody').innerHTML=html;
+}
+function selectSubject(name,group){
+  document.getElementById('pSubjectName').value=name;
+  if(!document.getElementById('pSubjectGroup').value) document.getElementById('pSubjectGroup').value=group;
+  closeSubject();
+  showToast('과목이 선택되었습니다: '+name);
+}
+
+/* ── 알림 ── */
+function showAlert(msg){
+  document.getElementById('alertMsg').innerHTML=msg.replace(/\n/g,'<br>');
+  document.getElementById('alertModal').classList.add('show');
+}
+function closeAlert(){
+  document.getElementById('alertModal').classList.remove('show');
+}
+
+/* ── 도움말 ── */
+function showHelp(){
+  document.getElementById('helpModal').classList.add('show');
+}
+function closeHelp(){
+  document.getElementById('helpModal').classList.remove('show');
+}
+
+/* ── 토스트 ── */
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2800);
+}
+function setStatus(msg){
+  document.getElementById('stMsg').textContent=msg;
+}
+
+/* ── 초기 조회 ── */
+doSearch();
+</script>
+</body>
+</html>
